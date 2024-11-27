@@ -135,3 +135,36 @@ func zero[V any]() V {
 	var zv V
 	return zv
 }
+
+// GeneratorResult is the result of a generator. Calling it will block until the
+// associated iterator has finished.
+type GeneratorResult[R any] func() (R, error)
+
+// Generator is an iterator that can have a final result.
+func Generator[V, R any](gf func(yield func(V) bool) (R, error)) (iter.Seq[V], GeneratorResult[R]) {
+	done := make(chan struct{})
+	var result R
+	var err error
+	return func(yield func(V) bool) {
+			defer close(done)
+			result, err = gf(yield)
+		}, func() (R, error) {
+			<-done
+			return result, err
+		}
+}
+
+// Generator2 is just like [Generator] except it allows the iterator to have 2
+// values for [iter.Seq2]
+func Generator2[K, V, R any](gf func(yield func(K, V) bool) (R, error)) (iter.Seq2[K, V], GeneratorResult[R]) {
+	done := make(chan struct{})
+	var result R
+	var err error
+	return func(yield func(K, V) bool) {
+			defer close(done)
+			result, err = gf(yield)
+		}, func() (R, error) {
+			<-done
+			return result, err
+		}
+}
