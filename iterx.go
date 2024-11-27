@@ -1,4 +1,4 @@
-package iterx
+package iterx // import "code.nkcmr.net/iterx"
 
 import (
 	"cmp"
